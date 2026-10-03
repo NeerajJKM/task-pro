@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - Task & Workflow Manager</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.6);
+    }
+  </style>
+</head>
+
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
+  <div class="min-h-full flex flex-col">
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-30 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">TaskFlow</h1>
+            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">State-Driven Task System</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+          <!-- Dark Mode Toggle Button -->
+          <button id="themeToggleBtn" aria-label="Toggle Theme" class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <svg id="sunIcon" class="w-5 h-5 hidden dark:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 9h-1m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg id="moonIcon" class="w-5 h-5 block dark:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+          <!-- Quick Add Button -->
+          <button id="openNewTaskModalBtn" class="flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all shadow-md shadow-indigo-600/20 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>New Task</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <!-- Quick Analytics Metrics -->
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm transition">
+          <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Tasks</p>
+          <p id="statTotal" class="text-3xl font-extrabold text-slate-900 dark:text-white mt-1">0</p>
+          <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">All registered items</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm transition">
+          <p class="text-xs font-semibold uppercase tracking-wider text-amber-500">Pending</p>
+          <p id="statPending" class="text-3xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">0</p>
+          <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Actions required</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm transition">
+          <p class="text-xs font-semibold uppercase tracking-wider text-emerald-500">Completed</p>
+          <p id="statCompleted" class="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">0</p>
+          <div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Successfully closed</div>
+        </div>
+
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-2xl p-5 shadow-sm transition">
+          <p class="text-xs font-semibold uppercase tracking-wider text-indigo-500">Completion Rate</p>
+          <p id="statRate" class="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">0%</p>
+          <div class="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-3 overflow-hidden">
+            <div id="statProgressBar" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+          <!-- Search Input -->
+          <div class="relative flex-1">
+            <svg class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input 
+              id="searchInput" 
+              type="text" 
+              placeholder="Search by title, description or tag..." 
+              class="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+            />
+          </div>
+
+          <!-- Controls: Category, Priority filter, Sort -->
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <select id="categoryFilter" class="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+              <option value="ALL">All Categories</option>
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Finance">Finance</option>
+              <option value="Health">Health</option>
+              <option value="Other">Other</option>
+            </select>
+
+            <select id="sortSelect" class="bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
+              <option value="date-desc">Newest First</option>
+              <option value="date-asc">Oldest First</option>
+              <option value="due-asc">Due Soonest</option>
+              <option value="priority-desc">Priority (High to Low)</option>
+            </select>
+
+            <button id="clearCompletedBtn" class="px-3.5 py-2.5 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl text-sm font-medium transition cursor-pointer flex items-center space-x-1.5 focus:outline-none focus:ring-2 focus:ring-red-400">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>Clear Done</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Filter Pills -->
+        <div class="flex items-center space-x-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 overflow-x-auto pb-1">
+          <button data-status="ALL" class="status-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition">All Tasks</button>
+          <button data-status="ACTIVE" class="status-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Active</button>
+          <button data-status="COMPLETED" class="status-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">Completed</button>
+          <button data-status="HIGH" class="status-tab px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">High Priority</button>
+        </div>
+      </section>
+
+      <section>
+        <div id="tasksContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Dynamic Task Cards will be inserted here -->
+        </div>
+
+        <!-- Empty State UI -->
+        <div id="emptyState" class="hidden flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 text-center">
+          <div class="w-16 h-16 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center mb-4">
+            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-slate-200">No tasks found</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm">No items match your active filters or your task board is currently empty.</p>
+          <button id="emptyStateAddBtn" class="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl shadow-sm transition">
+            Create New Task
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <div id="taskModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm hidden">
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl transition transform">
+        <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <h2 id="modalTitle" class="text-lg font-bold text-slate-900 dark:text-white">Create New Task</h2>
+          <button id="closeModalBtn" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <form id="taskForm" class="p-6 space-y-4">
+          <input type="hidden" id="taskIdInput">
+
+          <div>
+            <label for="taskTitle" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Title *</label>
+            <input 
+              type="text" 
+              id="taskTitle" 
+              required 
+              placeholder="e.g. Redesign analytics dashboard" 
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+            >
+          </div>
+
+          <div>
+            <label for="taskDescription" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Description</label>
+            <textarea 
+              id="taskDescription" 
+              rows="3" 
+              placeholder="Add details, links, or specific checklist requirements..." 
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white resize-none"
+            ></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="taskCategory" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Category</label>
+              <select id="taskCategory" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white cursor-pointer">
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Finance">Finance</option>
+                <option value="Health">Health</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="taskPriority" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Priority</label>
+              <select id="taskPriority" class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white cursor-pointer">
+                <option value="LOW">Low</option>
+                <option value="MEDIUM" selected>Medium</option>
+                <option value="HIGH">High</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="taskDueDate" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1">Due Date</label>
+            <input 
+              type="date" 
+              id="taskDueDate" 
+              class="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-900 dark:text-white"
+            >
+          </div>
+
+          <div class="pt-4 flex items-center justify-end space-x-3 border-t border-slate-100 dark:border-slate-800">
+            <button 
+              type="button" 
+              id="cancelModalBtn" 
+              class="px-4 py-2 text-sm font-semibold rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              class="px-5 py-2 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white shadow-md shadow-indigo-600/20 transition"
+            >
+              Save Task
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Notification Toast Box -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 translate-y-20 opacity-0 flex items-center space-x-2 text-sm font-medium">
+      <span id="toastMessage">Action completed</span>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * Application State Store
+     */
+    const STORAGE_KEY = 'taskflow_tasks_v1';
+    const THEME_KEY = 'taskflow_theme_preference';
+
+    const state = {
+      tasks: [],
+      filterStatus: 'ALL',
+      filterCategory: 'ALL',
+      searchTerm: '',
+      sortBy: 'date-desc'
+    };
+
+    const defaultTasks = [
+      {
+        id: 'seed-task-1',
+        title: 'Review quarterly revenue numbers',
+        description: 'Verify analytics discrepancy with team leads before the monthly review.',
+        category: 'Finance',
+        priority: 'HIGH',
+        dueDate: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+        completed: false,
+        createdAt: Date.now() - 10000000
+      },
+      {
+        id: 'seed-task-2',
+        title: 'Prepare design system documentation',
+        description: 'Export all primary UI tokens and finalize color contrast matrix.',
+        category: 'Work',
+        priority: 'MEDIUM',
+        dueDate: new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0],
+        completed: true,
+        createdAt: Date.now() - 20000000
+      },
+      {
+        id: 'seed-task-3',
+        title: 'Schedule annual dental checkup',
+        description: 'Call family clinic for Friday slot.',
+        category: 'Health',
+        priority: 'LOW',
+        dueDate: '',
+        completed: false,
+        createdAt: Date.now() - 5000000
+      }
+    ];
+
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          state.tasks = JSON.parse(raw);
+        } else {
+          state.tasks = [...defaultTasks];
+          saveTasks();
+        }
+      } catch (err) {
+        state.tasks = [...defaultTasks];
+      }
+    }
+
+    function saveTasks() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      toastMsg.textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2500);
+    }
+
+    function updateMetrics() {
+      const total = state.tasks.length;
+      const completed = state.tasks.filter(t => t.completed).length;
+      const pending = total - completed;
+      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statCompleted').textContent = completed;
+      document.getElementById('statPending').textContent = pending;
+      document.getElementById('statRate').textContent = `${rate}%`;
+      document.getElementById('statProgressBar').style.width = `${rate}%`;
+    }
+
+    function getFilteredAndSortedTasks() {
+      return state.tasks
+        .filter(task => {
+          // Status filter
+          if (state.filterStatus === 'ACTIVE' && task.completed) return false;
+          if (state.filterStatus === 'COMPLETED' && !task.completed) return false;
+          if (state.filterStatus === 'HIGH' && task.priority !== 'HIGH') return false;
+
+          // Category filter
+          if (state.filterCategory !== 'ALL' && task.category !== state.filterCategory) {
+            return false;
+          }
+
+          // Search term
+          if (state.searchTerm) {
+            const query = state.searchTerm.toLowerCase();
+            const matchTitle = task.title.toLowerCase().includes(query);
+            const matchDesc = (task.description || '').toLowerCase().includes(query);
+            const matchCat = (task.category || '').toLowerCase().includes(query);
+            if (!matchTitle && !matchDesc && !matchCat) return false;
+          }
+
+          return true;
+        })
+        .sort((a, b) => {
+          if (state.sortBy === 'date-desc') return b.createdAt - a.createdAt;
+          if (state.sortBy === 'date-asc') return a.createdAt - b.createdAt;
+          if (state.sortBy === 'due-asc') {
+            if (!a.dueDate) return 1;
+            if (!b.dueDate) return -1;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+          }
+          if (state.sortBy === 'priority-desc') {
+            const weight = { HIGH: 3, MEDIUM: 2, LOW: 1 };
+            return (weight[b.priority] || 0) - (weight[a.priority] || 0);
+          }
+          return 0;
+        });
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('tasksContainer');
+      const emptyState = document.getElementById('emptyState');
+      const filtered = getFilteredAndSortedTasks();
+
+      updateMetrics();
+
+      if (filtered.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      emptyState.classList.remove('flex');
+
+      const priorityBadge = {
+        HIGH: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20',
+        MEDIUM: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+        LOW: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20'
+      };
+
+      container.innerHTML = filtered.map(task => {
+        const isDone = task.completed;
+        const formattedDate = task.dueDate 
+          ? new Date(task.dueDate + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+          : 'No due date';
+
+        return `
+          <div class="bg-white dark:bg-slate-900 border ${isDone ? 'border-slate-200 dark:border-slate-800 opacity-75' : 'border-slate-200 dark:border-slate-800'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group">
+            <div>
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start space-x-3">
+                  <button 
+                    onclick="toggleTaskStatus('${task.id}')" 
+                    class="mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center transition-colors cursor-pointer ${
+                      isDone 
+                        ? 'bg-emerald-500 border-emerald-500 text-white' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-indigo-500'
+                    }"
+                    aria-label="Mark task done"
+                  >
+                    ${isDone ? '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+                  </button>
+                  <h4 class="font-semibold text-base leading-snug break-words ${isDone ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-900 dark:text-white'}">
+                    ${escapeHTML(task.title)}
+                  </h4>
+                </div>
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-md ${priorityBadge[task.priority]}">
+                  ${task.priority}
+                </span>
+              </div>
+
+              ${task.description ? `
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-2.5 ml-8 break-words leading-relaxed ${isDone ? 'line-through text-slate-400 dark:text-slate-500' : ''}">
+                  ${escapeHTML(task.description)}
+                </p>
+              ` : ''}
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <div class="flex items-center space-x-2">
+                <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-medium text-slate-700 dark:text-slate-300">
+                  ${escapeHTML(task.category)}
+                </span>
+                <span class="flex items-center space-x-1 ${task.dueDate && new Date(task.dueDate) < new Date().setHours(0,0,0,0) && !isDone ? 'text-red-500 font-medium' : ''}">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>${formattedDate}</span>
+                </span>
+              </div>
+
+              <div class="flex items-center space-x-1 opacity-90 group-hover:opacity-100">
+                <button 
+                  onclick="editTask('${task.id}')" 
+                  class="p-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition" 
+                  title="Edit Task"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button 
+                  onclick="deleteTask('${task.id}')" 
+                  class="p-1 hover:text-red-600 dark:hover:text-red-400 transition" 
+                  title="Delete Task"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    window.toggleTaskStatus = function(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        saveTasks();
+        renderTasks();
+        showToast(task.completed ? 'Task marked as completed' : 'Task marked as active');
+      }
+    };
+
+    window.deleteTask = function(id) {
+      state.tasks = state.tasks.filter(t => t.id !== id);
+      saveTasks();
+      renderTasks();
+      showToast('Task removed');
+    };
+
+    window.editTask = function(id) {
+      const task = state.tasks.find(t => t.id === id);
+      if (!task) return;
+
+      document.getElementById('taskIdInput').value = task.id;
+      document.getElementById('taskTitle').value = task.title;
+      document.getElementById('taskDescription').value = task.description || '';
+      document.getElementById('taskCategory').value = task.category;
+      document.getElementById('taskPriority').value = task.priority;
+      document.getElementById('taskDueDate').value = task.dueDate || '';
+
+      document.getElementById('modalTitle').textContent = 'Edit Task';
+      openModal();
+    };
+
+    const modal = document.getElementById('taskModal');
+    function openModal() {
+      modal.classList.remove('hidden');
+    }
+    function closeModal() {
+      modal.classList.add('hidden');
+      document.getElementById('taskForm').reset();
+      document.getElementById('taskIdInput').value = '';
+      document.getElementById('modalTitle').textContent = 'Create New Task';
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const id = document.getElementById('taskIdInput').value;
+      const title = document.getElementById('taskTitle').value.trim();
+      const description = document.getElementById('taskDescription').value.trim();
+      const category = document.getElementById('taskCategory').value;
+      const priority = document.getElementById('taskPriority').value;
+      const dueDate = document.getElementById('taskDueDate').value;
+
+      if (!title) return;
+
+      if (id) {
+        // Edit existing
+        const task = state.tasks.find(t => t.id === id);
+        if (task) {
+          task.title = title;
+          task.description = description;
+          task.category = category;
+          task.priority = priority;
+          task.dueDate = dueDate;
+          showToast('Task updated successfully');
+        }
+      } else {
+        // Create new
+        const newTask = {
+          id: 'task_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          title,
+          description,
+          category,
+          priority,
+          dueDate,
+          completed: false,
+          createdAt: Date.now()
+        };
+        state.tasks.unshift(newTask);
+        showToast('New task created');
+      }
+
+      saveTasks();
+      renderTasks();
+      closeModal();
+    });
+
+    document.getElementById('openNewTaskModalBtn').addEventListener('click', () => {
+      document.getElementById('taskForm').reset();
+      document.getElementById('taskIdInput').value = '';
+      document.getElementById('modalTitle').textContent = 'Create New Task';
+      openModal();
+    });
+
+    document.getElementById('emptyStateAddBtn').addEventListener('click', () => {
+      document.getElementById('taskForm').reset();
+      document.getElementById('taskIdInput').value = '';
+      openModal();
+    });
+
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
+
+    // Filter status tabs
+    const statusTabs = document.querySelectorAll('.status-tab');
+    statusTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        statusTabs.forEach(t => {
+          t.classList.remove('bg-indigo-600', 'text-white');
+          t.classList.add('text-slate-600', 'dark:text-slate-400');
+        });
+        tab.classList.add('bg-indigo-600', 'text-white');
+        tab.classList.remove('text-slate-600', 'dark:text-slate-400');
+
+        state.filterStatus = tab.dataset.status;
+        renderTasks();
+      });
+    });
+
+    // Category filter
+    document.getElementById('categoryFilter').addEventListener('change', (e) => {
+      state.filterCategory = e.target.value;
+      renderTasks();
+    });
+
+    // Sort order
+    document.getElementById('sortSelect').addEventListener('change', (e) => {
+      state.sortBy = e.target.value;
+      renderTasks();
+    });
+
+    // Search query
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      state.searchTerm = e.target.value.trim();
+      renderTasks();
+    });
+
+    // Clear completed tasks
+    document.getElementById('clearCompletedBtn').addEventListener('click', () => {
+      const completedCount = state.tasks.filter(t => t.completed).length;
+      if (completedCount === 0) {
+        showToast('No completed tasks to clear');
+        return;
+      }
+      state.tasks = state.tasks.filter(t => !t.completed);
+      saveTasks();
+      renderTasks();
+      showToast(`Cleared ${completedCount} finished task${completedCount > 1 ? 's' : ''}`);
+    });
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    function applyTheme(isDark) {
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem(THEME_KEY, 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem(THEME_KEY, 'light');
+      }
+    }
+
+    const savedTheme = localStorage.getItem(THEME_KEY);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(savedTheme === 'dark' || (!savedTheme && prefersDark));
+
+    themeToggleBtn.addEventListener('click', () => {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      applyTheme(!isCurrentlyDark);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTasks();
+      renderTasks();
+    });
+  </script>
+</body>
+</html>
